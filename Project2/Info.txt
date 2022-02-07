@@ -1,0 +1,4 @@
+This is Project 2 - Bar Charts with Data
+
+Data is derived from the Hitting section of https://www.mlb.com/stats/
+
