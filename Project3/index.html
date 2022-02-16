@@ -4,6 +4,14 @@
 
 .bar { fill: steelblue; }
 
+p {
+    margin: 10px;
+    padding: 25px;
+    background-color: yellow;
+    color: pink;
+    font-family: Helvetica, Arial, sans-serif;
+}
+
 </style>
 <body>
 	
@@ -52,9 +60,27 @@ var svg = d3.select("body")
         };
     }
 
+    var padding = 20;
+
     d3.csv("gpasemesters.csv", convertNumber, function(data) {
 
-        console.log(data);
+    console.log(data);
+
+
+        var xScale = d3.scaleLinear()
+        .domain([
+        d3.min(data, function(d) { return d.Term; }),
+        d3.max(data, function(d) { return d.Term; })
+        ])
+        .range([100, data.length * 100]);
+
+        var yScale = d3.scaleLinear()
+        .domain([
+            0,
+            4
+        ])
+        .range([0, 400])
+        
 
         
 
@@ -100,7 +126,23 @@ var svg = d3.select("body")
         .attr("font-size", "12px")
         .attr("font-weight", function(d, i) { return 900; })
         .attr("fill", "blue");
+
+        var xAxis = d3.axisBottom()
+        .scale(xScale);
+
+        var yAxis = d3.axisRight()
+        .scale(yScale);
+
+        
+
+        svg.append("g")
+        .call(xAxis);
+
+        svg.append("g")
+        .call(yAxis);
+
     })
+
 
 
 </script>
