@@ -17,6 +17,10 @@ p {
 	
 <!-- load the d3.js library -->    	
 <script src="https://d3js.org/d3.v4.min.js"></script>
+<input type="radio" name="filter" value="10" onclick="filter_data(10)"> 10 <br>
+<input type="radio" name="filter" value="20" onclick="filter_data(20)"> 20 <br>
+<input type="radio" name="filter" value="30" onclick="filter_data(30)"> 30 <br>
+
 <script>
 
     var dataset = [];
@@ -33,6 +37,25 @@ p {
         }
     }
 
+    var val = 0
+
+    function filter_data(value) {
+        val = value;
+
+        svg.selectAll("rect")
+        .data(dataset)
+        .transition()
+        .duration(100)
+        .attr("fill", function(d) { 
+            if(d >= (value - 10) && d <= value) {
+                return `rgb(${(d/value) * 255}, 0, 0)`
+            } else {
+                return `rgb(0, 0, ${(d/30) * 255})`
+            }
+        })
+        ;
+    }
+
     var w = 1920;
     var h = 1080;
 
@@ -40,6 +63,8 @@ p {
     var margin = {top: 20, right: 20, bottom: 30, left: 40},
         width = 960 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
+
+
 
     // set the ranges
     var x = d3.scaleBand()
@@ -68,7 +93,7 @@ p {
                 return (d * 10);
             })
             .attr("fill", function(d) {
-            return "rgb(0, 0, " + Math.round(d * 10) + ")";
+                return `rgb(0, 0, ${(d/30 * 255)})`;
             })
             .on("mouseover", function() {
                 d3.select(this)
@@ -79,7 +104,11 @@ p {
             .on("mouseout", function() {
                 d3.select(this)
                 .attr("fill", function(d) {
-                return "rgb(0, 0, " + Math.round(d * 10) + ")";
+                    if(d <= val) {
+                        return `rgb(${(d/val) * 255}, 0, 0)`
+                    } else {
+                        return `rgb(0, 0, ${(d/30) * 255})`
+                    }
                 })
             })
             .on("click", function() {
