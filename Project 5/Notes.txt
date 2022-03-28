@@ -1,0 +1,15 @@
+Notes on the connection nodes in the force layout:
+
+-The more frequently linked nodes are thicker than less frequently linked.
+  -Example: The Jets have one node, and it's incredibly thin
+    Conversely, the patriots nodes are incredibly thickened with how frequently they appear in the superbowl.
+    
+The super_bowl_nfl.json file contains
+  -All 32 NFL teams by their current name
+  -All 56 super bowls, chronologically sorted.
+  
+Things that can be done for improvement:
+  -Highlighting links to point out what year these events happen
+  -Adding a category for what the score was beteween that game
+  -Highlighting by team
+  -Showing win loss records for each team.
