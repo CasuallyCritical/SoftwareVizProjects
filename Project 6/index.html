@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.links line {
+  stroke: #999;
+  stroke-opacity: 1;
+}
+
+.nodes circle {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+text {
+  font-family: sans-serif;
+  font-size: 10px;
+}
+
+</style>
+<svg width="1920" height="1080"></svg>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+    // set the dimensions and margins of the graph
+            
+    // append the svg object to the body of the page
+    // append a 'group' element to 'svg'
+    // moves the 'group' element to the top left margin
+    var svg = d3.select("body").append("svg")
+        .attr("width", 1920)
+        .attr("height", 1080);
+
+        var color = d3.scaleQuantize()
+ .range(["hsla(240, 50%, 50%, 1)", "hsla(192, 50%, 50%, 1)", "hsla(144, 50%, 50%, 1)", "hsla(96, 50%, 50%, 1)", "hsla(48, 50%, 50%, 1)", "hsla(0, 50%, 50%, 1)"]);
+
+
+    var width = 1920;
+    var height = 1080;
+
+    var projection = d3.geoAlbersUsa()
+    .translate([width/2, height/2])
+    .scale(1000, 1000);
+
+    var path = d3.geoPath()
+    .projection(projection);
+
+
+    //Load in GeoJSON data
+    /* d3.json("us_states.json", function(json) {
+    //Bind data and create one path per GeoJSON feature
+    svg.selectAll("path")
+    .data(json.features)
+    .enter()
+    .append("path")
+    .style("fill", function(){ return "rgb(0, 128, 255)"})
+    .attr("d", path);
+    }); */
+
+    
+	var formatDecimals = d3.format(".3");  //e.g. converts 1.23456 to "1.23"
+
+    var map = svg.append("g")
+						.attr("id", "map")
+
+    d3.csv("us-car-gas-chart.csv", function(data) {
+        color.domain([
+        d3.min(data, function(d) { return d.vehicles/1000; }),
+        d3.max(data, function(d) { return d.vehicles/1000; })
+        ]);
+        d3.json("us_states.json", function(json) {
+            for(var i = 0; i < data.length; i++) {
+                var dataState = data[i].state;
+                var dataVehicle = parseFloat(data[i].vehicles)
+                var dataGas = parseFloat(data[i].gas);
+
+                for(var j = 0; j < json.features.length; j++) {
+                    var jsonState = json.features[j].properties.name;
+
+                    if(dataState == jsonState) {
+                        json.features[j].properties.gas = dataGas;
+                        json.features[j].properties.vehicles = dataVehicle
+
+                        break;
+                    }
+                }
+            }
+
+            map.selectAll("path")
+            .data(json.features)
+            .enter()
+            .append("path")
+            .attr("d", path)
+            .style("fill", function(d) {
+            //Get data value
+            var value = d.properties.vehicles/1000;
+            if (value) {
+            //If value exists…
+            return color(value);
+            } else {
+            //If value is undefined…
+            return "#ccc";
+            }
+            });
+
+            map.selectAll("text")
+						.data(json.features)
+						.enter()
+						.append("text")
+						.attr("class", "label")
+						.attr("x", function(d) {
+							 return path.centroid(d)[0];
+						})
+						.attr("y", function(d) {
+							 return path.centroid(d)[1];
+						})
+						.text(function(d) {
+							 if (d.properties.gas) {
+
+								 return d.properties.gas;
+							 };
+						});
+
+
+        })
+    });
+    
+
+</script>
