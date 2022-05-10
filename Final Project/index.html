@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.links line {
+  stroke: #999;
+  stroke-opacity: 1;
+}
+
+.nodes circle {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+text {
+  font-family: sans-serif;
+  font-size: 10px;
+}
+
+</style>
+<svg width="800" height="600"></svg>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<input type="range" id="year" min="1960" max="2020" step="4" value="1960" onchange="update()">
+<button onclick="summarize()">Summarize Elections!</button>
+<script>
+    // set the dimensions and margins of the graph
+            
+    // append the svg object to the body of the page
+    // append a 'group' element to 'svg'
+    // moves the 'group' element to the top left margin
+    var svg = d3.select("body").append("svg")
+        .attr("width", 800)
+        .attr("height", 600);
+
+        var color = d3.scaleQuantize()
+ .range(["hsla(240, 50%, 50%, 1)", "hsla(192, 50%, 50%, 1)", "hsla(144, 50%, 50%, 1)", "hsla(96, 50%, 50%, 1)", "hsla(48, 50%, 50%, 1)", "hsla(0, 50%, 50%, 1)"]);
+
+
+    var width = 800;
+    var height = 600;
+
+    var projection = d3.geoAlbersUsa()
+    .translate([width/2, height/2])
+    .scale(1000, 1000);
+
+    var path = d3.geoPath()
+    .projection(projection);
+
+
+    //Load in GeoJSON data
+    /* d3.json("us_states.json", function(json) {
+    //Bind data and create one path per GeoJSON feature
+    svg.selectAll("path")
+    .data(json.features)
+    .enter()
+    .append("path")
+    .style("fill", function(){ return "rgb(0, 128, 255)"})
+    .attr("d", path);
+    }); */
+
+
+  var data = [];
+    
+  var year = 1960;
+
+	var formatDecimals = d3.format(".3");  //e.g. converts 1.23456 to "1.23"
+
+    var map = svg.append("g")
+						.attr("id", "map")
+
+    function summarize() {
+      var count = 0;
+
+      d3.json("us_states.json", function(json) {
+            
+        for(var j = 0; j < json.features.length; j++) {
+                var jsonState = json.features[j].properties.name;
+
+                json.features[j].properties.Rep = 0;
+                json.features[j].properties.Dem = 0;
+                json.features[j].properties.Ind = 0;
+            }
+
+            for(n = 1960; n < 2020; n+=4) {
+              count ++;
+              var dat = data[n];
+              for(i = 0; i < dat.length; i++) {
+                
+                var dataState = dat[i].Name;
+                var dataGOP = dat[i].GOP;
+                var dataDNC = dat[i].DNC;
+                var dataOTR = Number(dat[i].Other);
+
+                
+
+                for(var j = 0; j < json.features.length; j++) {
+                      var jsonState = json.features[j].properties.name;
+
+                      if(dataState == jsonState) {
+                          json.features[j].properties.Rep += Number(dataGOP);
+                          json.features[j].properties.Dem += Number(dataDNC);
+                          json.features[j].properties.Ind += Number(dataOTR);
+
+                          
+
+                          break;
+                      }
+                  }
+              }
+            }
+
+            for(var j = 0; j < json.features.length; j++) {
+                var jsonState = json.features[j].properties.name;
+
+                json.features[j].properties.Rep /= 16;
+                json.features[j].properties.Dem /= 16;
+                json.features[j].properties.Ind /= 16;
+            }
+            
+
+            map.selectAll("path")
+            .data(json.features)
+            .transition()
+            .duration(500)
+            .attr("d", path)
+            .style("fill", function(d) {
+            //Get data value
+            //console.log(d.properties.Rep);
+            var value = `rgb(${d.properties.Rep * 128}, ${d.properties.Ind * 128}, ${d.properties.Dem * 128})`;
+            //console.log(value);
+            if (value) {
+            //If value exists…
+            return value;
+            } else {
+            //If value is undefined…
+            return "#ccc";
+            }
+            });
+
+
+        })
+    }
+
+    function update() {
+      year = Number(document.getElementById("year").value);
+      
+      d3.json("us_states.json", function(json) {
+            var dat = data[year];
+            for(i = 0; i < dat.length; i++) {
+              //console.log(i)
+              var dataState = dat[i].Name;
+              var dataGOP = dat[i].GOP;
+              var dataDNC = dat[i].DNC;
+              var dataOTR = Number(dat[i].Other);
+
+              //console.log(dataState)
+
+              for(var j = 0; j < json.features.length; j++) {
+                    var jsonState = json.features[j].properties.name;
+
+                    if(dataState == jsonState) {
+                        json.features[j].properties.Rep = Number(dataGOP);
+                        json.features[j].properties.Dem = Number(dataDNC);
+                        json.features[j].properties.Ind = Number(dataOTR);
+
+                        //console.log(json.features[j].properties)
+
+                        break;
+                    }
+                }
+            }
+
+            
+
+            map.selectAll("path")
+            .data(json.features)
+            .transition()
+            .duration(500)
+            .attr("d", path)
+            .style("fill", function(d) {
+            //Get data value
+            //console.log(d.properties.Rep);
+            var value = `rgb(${d.properties.Rep * 128}, 0, ${d.properties.Dem * 128})`;
+            if(d.properties.Rep == 0 && d.properties.Dem == 0) {
+              value = `rgb(0, 128, 0)`
+            }
+            //console.log(value);
+            if (value) {
+            //If value exists…
+            return value;
+            } else {
+            //If value is undefined…
+            return "#ccc";
+            }
+            });
+
+
+        })
+
+    }
+
+    d3.json("election_data_us.json", function(json) {
+      for(i = 0; i < json.nodes.length; i++) {
+        var jsonyear = Number(json.nodes[i].year);
+        var jsonresults = json.nodes[i].results;
+        data[jsonyear] = [];
+        for(j = 0; j < jsonresults.length; j++) {
+          var statename = jsonresults[j].state;
+          var gop = Math.sign(Number(jsonresults[j].GOP));
+          var dnc = Math.sign(Number(jsonresults[j].DNC));
+          var other = Math.sign(Number(jsonresults[j].Other));
+
+          data[jsonyear][j] = {Name: statename, DNC: dnc, GOP: gop, Other: other};
+
+          //console.log(data[jsonyear][j])
+        }
+      }
+    });
+
+        d3.json("us_states.json", function(json) {
+            var dat = data[year];
+            for(i = 0; i < dat.length; i++) {
+              var dataState = dat[i].Name;
+              var dataGOP = dat[i].GOP;
+              var dataDNC = dat[i].DNC;
+              var dataOTR = Number(dat[i].Other);
+
+
+              for(var j = 0; j < json.features.length; j++) {
+                    var jsonState = json.features[j].properties.name;
+
+                    if(dataState == jsonState) {
+                        json.features[j].properties.Rep = Number(dataGOP);
+                        json.features[j].properties.Dem = Number(dataDNC);
+                        json.features[j].properties.Ind = Number(dataOTR);
+
+                        
+
+                        break;
+                    }
+                }
+            }
+
+            
+
+            map.selectAll("path")
+            .data(json.features)
+            .enter()
+            .append("path")
+            .attr("d", path)
+            .style("fill", function(d) {
+            //Get data value
+            var value = `rgb(${d.properties.Rep * 128}, ${d.properties.Ind * 128}, ${d.properties.Dem * 128})`;
+            if (value) {
+            //If value exists…
+            return value;
+            } else {
+            //If value is undefined…
+            return "#ccc";
+            }
+            });
+
+
+
+        })
+    
+
+</script>
